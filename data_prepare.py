@@ -5,6 +5,8 @@ import pyproj
 from scipy.interpolate import make_interp_spline
 import math
 import matplotlib.pyplot as plt
+
+
 # a = 6378137
 # b = 6356752.3142
 # esq = 6.69437999014 * 0.001
@@ -45,40 +47,42 @@ import matplotlib.pyplot as plt
 #   return geodetic.reshape(input_shape)
 # 在字符串指定位置的插入字符
 def str_insert(str_origin, pos, str_add):
-    str_list = list(str_origin)    # 字符串转list
+    str_list = list(str_origin)  # 字符串转list
     str_list.insert(pos, str_add)  # 在指定位置插入字符串
-    str_out = ''.join(str_list)    # 空字符连接
-    return  str_out
+    str_out = ''.join(str_list)  # 空字符连接
+    return str_out
+
 
 # 数组去重
 def unique(old_list):
-    newList = []
+    newlist = []
     # 判断相邻时间是否相等
     if np.any(old_list[1:] == old_list[:-1]):
         for x in old_list:
-            if x in newList:
+            if x in newlist:
                 # 若相等，则加上一个微小的数使其不等
                 x = x + 0.005
-            newList.append(x)
-        return np.array(newList)
-    else: return old_list
+            newlist.append(x)
+        return np.array(newlist)
+    else:
+        return old_list
+
 
 def series_to_supervised(data, n_in=1, n_out=1, dropnan=True):
-    n_vars = 1 if type(data) is list else data.shape[1]
-    df = pd.DataFrame(data)
-    column_names = ['lats', 'lons', 'CAN_speeds', 'steering_angles', 'acceleration_forward']
+    data_df = pd.DataFrame(data)
+    column_name = ['lats', 'lons', 'CAN_speeds', 'steering_angles', 'acceleration_forward']
     cols, names = list(), list()
     # input sequence (t-n, ... t-1)
     for i in range(n_in, 0, -1):
-        cols.append(df.shift(i))
-        names += [('%s(t-%d)' % (j, i)) for j in column_names]
+        cols.append(data_df.shift(i))
+        names += [('%s(t-%d)' % (j, i)) for j in column_name]
     # forecast sequence (t, t+1, ... t+n)
     for i in range(0, n_out):
         cols.append(df.shift(-i))
         if i == 0:
-            names += [('%s(t)' % (j)) for j in column_names]
+            names += [('%s(t)' % j) for j in column_name]
         else:
-            names += [('%s(t+%d)' % (j, i)) for j in column_names]
+            names += [('%s(t+%d)' % (j, i)) for j in column_name]
     # put it all together
     agg = pd.concat(cols, axis=1)
     agg.columns = names
@@ -87,32 +91,37 @@ def series_to_supervised(data, n_in=1, n_out=1, dropnan=True):
         agg.dropna(inplace=True)
     return agg
 
-EARTH_REDIUS = 6378.137
+
+EARTH_RADIUS = 6378.137
+
 
 def rad(d):
     return d * math.pi / 180.0
-def getDistance(lat1, lng1, lat2, lng2):
+
+
+def getdistance(lat1, lng1, lat2, lng2):
     # 对数组取元素做运算
     res = []
     for i in range(len(lat1)):
-        radLat1 = rad(lat1[i])
-        radLat2 = rad(lat2[i])
-        a = radLat1 - radLat2
+        radlat1 = rad(lat1[i])
+        radlat2 = rad(lat2[i])
+        a = radlat1 - radlat2
         b = rad(lng1[i]) - rad(lng2[i])
-        s = 2 * math.asin(math.sqrt(math.pow(math.sin(a / 2), 2) + math.cos(radLat1) * math.cos(radLat2) * math.pow(
+        s = 2 * math.asin(math.sqrt(math.pow(math.sin(a / 2), 2) + math.cos(radlat1) * math.cos(radlat2) * math.pow(
             math.sin(b / 2), 2)))
-        s = s * EARTH_REDIUS * 1000
+        s = s * EARTH_RADIUS * 1000
         res.append(s)
     return res
+
 
 if __name__ == '__main__':
 
     # 用于GNSS坐标转化
     position_transformer = pyproj.Transformer.from_crs(
-                {"proj": 'geocent', "ellps": 'WGS84', "datum": 'WGS84'},
-                {"proj": 'latlong', "ellps": 'WGS84', "datum": 'WGS84'},
-            )
-    dataset_directory = 'D:\comma2k19'
+        {"proj": 'geocent', "ellps": 'WGS84', "datum": 'WGS84'},
+        {"proj": 'latlong', "ellps": 'WGS84', "datum": 'WGS84'},
+    )
+    dataset_directory = "D:\\comma2k19"
     chunk_set = []
     for chunk in os.listdir(dataset_directory):
         # 忽略生成的csv文件
@@ -121,7 +130,7 @@ if __name__ == '__main__':
         # 如果序号为单个时在前补零，以便后面排序
         if len(chunk) == 7:
             used_name = chunk
-            chunk = str_insert(chunk,6,'0')
+            chunk = str_insert(chunk, 6, '0')
             os.rename(os.path.join(dataset_directory, used_name), os.path.join(dataset_directory, chunk))
         chunk_set.append(os.path.join(dataset_directory, chunk))
     # 将序号小的片段放在前面
@@ -141,8 +150,8 @@ if __name__ == '__main__':
         # 如果序号为单个时在前补零，以便后面排序
         if len(segment) == 1:
             used_name = segment
-            segment = '0'+segment
-            os.rename(os.path.join(route_set[route_index], used_name),os.path.join(route_set[route_index], segment))
+            segment = '0' + segment
+            os.rename(os.path.join(route_set[route_index], used_name), os.path.join(route_set[route_index], segment))
         segment_set.append(os.path.join(route_set[route_index], segment))
     # 将序号小的片段放在前面
     segment_set.sort()
@@ -174,7 +183,9 @@ if __name__ == '__main__':
         # 确保时间无重复值
         temp_CAN_speed_times = unique(temp_CAN_times)
         # 对CAN数据按照GNSS参考时间插值
-        temp_CAN_speeds = make_interp_spline(temp_CAN_speed_times, np.load(main_dir + '\\processed_log\\CAN\\speed\\value'))(temp_GNSS_time).flatten()
+        temp_CAN_speeds = make_interp_spline(temp_CAN_speed_times,
+                                             np.load(main_dir + '\\processed_log\\CAN\\speed\\value'))(
+            temp_GNSS_time).flatten()
         CAN_speeds = np.append(CAN_speeds, temp_CAN_speeds)
         # CAN_angles_times和CAN_speed_times有时不一致
         temp_CAN_angles_times = np.load(main_dir + '\\processed_log\\CAN\\steering_angle\\t')
@@ -184,8 +195,10 @@ if __name__ == '__main__':
         steering_angles = np.append(steering_angles, temp_steering_angles)
         # 对IMU数据按照GNSS参考时间插值
         temp_IMU_times = np.load(main_dir + '\\processed_log\\IMU\\accelerometer\\t')
-        temp_acceleration_forward = make_interp_spline(temp_IMU_times, np.load(main_dir +
-                                '\\processed_log\\IMU\\accelerometer\\value')[:, 0])(temp_GNSS_time)
+        temp_acceleration_forward = make_interp_spline(
+            temp_IMU_times,
+            np.load(main_dir + '\\processed_log\\IMU\\accelerometer\\value')[:, 0]
+        )(temp_GNSS_time)
         acceleration_forward = np.append(acceleration_forward, temp_acceleration_forward)
 
     DataSet = list(zip(times, lats, lons, CAN_speeds, steering_angles, acceleration_forward))
@@ -199,7 +212,7 @@ if __name__ == '__main__':
     # 计算距离
     lons_t = reframed['lons(t)'].values
     lats_t = reframed['lats(t)'].values
-    distance = np.array(getDistance(lats[:-1], lons[:-1], lats_t, lons_t))
+    distance = np.array(getdistance(lats[:-1], lons[:-1], lats_t, lons_t))
     # drop columns we don't want to predict including（CAN_speed,steering_angel, acceleration_forward)
     reframed.drop(reframed.columns[[0, 1, 5, 6, 7, 8, 9]], axis=1, inplace=True)
     # 时间和计算的距离添加到数据集
@@ -213,6 +226,4 @@ if __name__ == '__main__':
     plt.ylabel('Distance travelled during single timestamp (m) ', fontsize=12)
     plt.show()
     # 将合并的数据集保存到.csv文件中
-    reframed.to_csv(route_set[route_index]+".csv", index=False, sep=',')
-
-
+    reframed.to_csv(route_set[route_index] + ".csv", index=False, sep=',')

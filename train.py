@@ -9,14 +9,12 @@ from sklearn.metrics import mean_squared_error
 import matplotlib.pyplot as plt
 from keras import optimizers
 import tensorflow as tf
-gpus = tf.config.experimental.list_physical_devices('GPU')
+
+gpus = tf.config.list_physical_devices('GPU')
 for gpu in gpus:
     tf.config.experimental.set_memory_growth(gpu, True)
 
-
-
 if __name__ == '__main__':
-
     train_CSV_FILE_PATH = 'D:\\comma2k19\\Chunk_01\\b0c9d2329ad1606b_2018-08-02--08-34-47.csv'
     test_CSV_FILE_PATH = 'D:\\comma2k19\\Chunk_01\\b0c9d2329ad1606b_2018-08-01--21-13-49.csv'
     train_df = pd.read_csv(train_CSV_FILE_PATH)
@@ -47,7 +45,7 @@ if __name__ == '__main__':
     model.add(LSTM(50, input_shape=(train_X.shape[1], train_X.shape[2])))
     model.add(Dense(1))
     # 设置学习率等参数
-    # adam = optimizers.Adam(lr=0.01, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
+    adam = optimizers.Adam(lr=0.01, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
     model.compile(loss='mae', optimizer='adam')
     # fit network
     history = model.fit(train_X, train_y, epochs=100, batch_size=50, validation_data=(test_X, test_y), verbose=2,

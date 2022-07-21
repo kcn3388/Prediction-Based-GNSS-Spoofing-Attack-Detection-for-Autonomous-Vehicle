@@ -4,18 +4,21 @@ from sklearn.metrics import mean_squared_error
 import matplotlib.pyplot as plt
 import tensorflow as tf
 from sklearn.preprocessing import MinMaxScaler
-gpus = tf.config.experimental.list_physical_devices('GPU')
+
+gpus = tf.config.list_physical_devices('GPU')
 for gpu in gpus:
     tf.config.experimental.set_memory_growth(gpu, True)
+
+
 def average(seq, total=0.0):
-  num = 0
-  for item in seq:
-    total += item
-    num += 1
-  return total / num
+    num = 0
+    for item in seq:
+        total += item
+        num += 1
+    return total / num
+
 
 if __name__ == '__main__':
-
     CSV_FILE_PATH = 'D:\\comma2k19\\Chunk_03\\99c94dc769b5d96e_2018-05-01--08-13-53.csv'
     df = pd.read_csv(CSV_FILE_PATH)
     values = df.to_numpy()
@@ -43,9 +46,9 @@ if __name__ == '__main__':
     plt.ylabel('Distance travelled during single timestamp (m) ', fontsize=12)
     plt.legend()
     plt.show()
-    min = min((distance - yhat), key=abs)
-    max = max((distance - yhat), key=abs)
-    avr = average(distance-yhat)
-    print('Min:%f' % min)
-    print('Max:%f' % max)
+    min_n = min((distance - yhat), key=abs)
+    max_n = max((distance - yhat), key=abs)
+    avr = average(distance - yhat)
+    print('Min:%f' % min_n)
+    print('Max:%f' % max_n)
     print('average:%f' % avr)
